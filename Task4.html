@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mobile Phones List</title>
+  <style>
+    /* CSS styles for product list */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .product {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    .product:hover {
+      background-color: #f0f0f0;
+    }
+    .compare-btn {
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .compare-btn:hover {
+      background-color: #0056b3;
+    }
+    .popup {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: #fff;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 20px;
+      z-index: 999;
+      width: 60%; /* Adjust the width as needed */
+      max-width: 600px; /* Adjust the maximum width as needed */
+      box-sizing: border-box;
+    }
+    .popup-content {
+      display: flex;
+      align-items: center;
+    }
+    .popup-image {
+      flex: 0 0 auto;
+      margin-right: 20px;
+    }
+    .popup-image img {
+      max-width: 100%;
+      height: auto;
+    }
+    .popup-details {
+      flex: 1 1 auto;
+    }
+    .compare-list {
+      margin-top: 20px;
+    }
+    .compare-list table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .compare-list th,
+    .compare-list td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+    .compare-list th {
+      background-color: #007bff;
+      color: #fff;
+    }
+    .compare-list td {
+      background-color: #f9f9f9;
+    }
+    .compare-list .delete-btn {
+      background-color: #dc3545;
+      color: #fff;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    .compare-list .delete-btn:hover {
+      background-color: #c82333;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Mobile Phones List</h1>
+    <div id="product-list"></div>
+    <div class="popup" id="popup">
+      <div class="popup-content">
+        <div class="popup-image">
+          <img id="popup-image" src="" alt="Product Image">
+        </div>
+        <div class="popup-details">
+          <h2 id="popup-title"></h2>
+          <p><strong>Price:</strong> <span id="popup-price"></span></p>
+          <p><strong>Rating:</strong> <span id="popup-rating"></span></p>
+          <p><strong>Processor:</strong> <span id="popup-processor"></span></p>
+          <p><strong>Storage:</strong> <span id="popup-storage"></span></p>
+          <p><strong>Display:</strong> <span id="popup-display"></span></p>
+          <button onclick="closePopup()">Close</button>
+        </div>
+      </div>
+    </div>
+    <div class="compare-list" id="compare-list">
+      <h2>Compare List</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Product Name</th>
+            <th>Price</th>
+            <th>Rating</th>
+            <th>Processor</th>
+            <th>Storage</th>
+            <th>Display</th>
+            <th>Delete</th>
+          </tr>
+        </thead>
+        <tbody id="compare-items"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // JavaScript to populate mobile phones list and handle pop-up
+    const mobiles = [
+      { brand: "Samsung", model: "Galaxy S21", price: 999, rating: 4.5, processor: "Snapdragon 888", storage: "128GB", display: "6.2-inch AMOLED", image: "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-s21-5g-r.jpg" },
+      { brand: "Apple", model: "iPhone 13", price: 1099, rating: 4.8, processor: "A15 Bionic", storage: "256GB", display: "6.1-inch Super Retina XDR", image: "https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-13.jpg" },
+      { brand: "OnePlus", model: "9 Pro", price: 899, rating: 4.7, processor: "Snapdragon 888", storage: "256GB", display: "6.7-inch Fluid AMOLED", image: "https://i.gadgets360cdn.com/products/large/oneplus-9-pro-373x800-1616153187.jpg?downsize=*:180" },
+      { brand: "Xiaomi", model: "Mi 11", price: 799, rating: 4.6, processor: "Snapdragon 888", storage: "256GB", display: "6.81-inch AMOLED", image: "https://fdn2.gsmarena.com/vv/bigpic/xiaomi-mi11.jpg" }
+    ];
+
+    const productList = document.getElementById('product-list');
+    const compareList = document.getElementById('compare-items');
+    const popup = document.getElementById('popup');
+    const popupTitle = document.getElementById('popup-title');
+    const popupImage = document.getElementById('popup-image');
+    const popupPrice = document.getElementById('popup-price');
+    const popupRating = document.getElementById('popup-rating');
+    const popupProcessor = document.getElementById('popup-processor');
+    const popupStorage = document.getElementById('popup-storage');
+    const popupDisplay = document.getElementById('popup-display');
+
+    // Array to store selected products for comparison
+    const selectedProducts = [];
+
+    // Function to open popup and display product details
+    function openPopup(product) {
+      popupTitle.textContent = `${product.brand} ${product.model}`;
+      popupImage.src = product.image;
+      popupPrice.textContent = `$${product.price}`;
+      popupRating.textContent = `${product.rating} / 5`;
+      popupProcessor.textContent = product.processor;
+      popupStorage.textContent = product.storage;
+      popupDisplay.textContent = product.display;
+      popup.style.display = 'block';
+    }
+
+    // Function to close popup
+    function closePopup() {
+      popup.style.display = 'none';
+    }
+
+    // Function to handle compare button click
+    function compareProduct(event, productName) {
+      event.stopPropagation();
+      const product = mobiles.find(mobile => `${mobile.brand} ${mobile.model}` === productName);
+      if (product && !selectedProducts.includes(product)) {
+        selectedProducts.push(product);
+        updateCompareList();
+      }
+    }
+
+    // Function to remove a product from the comparison list
+    function removeProductFromComparison(index) {
+      selectedProducts.splice(index, 1);
+      updateCompareList();
+    }
+
+    // Function to update the compare list
+    function updateCompareList() {
+      compareList.innerHTML = '';
+      selectedProducts.forEach((product, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${product.brand} ${product.model}</td>
+          <td>$${product.price}</td>
+          <td>${product.rating} / 5</td>
+          <td>${product.processor}</td>
+          <td>${product.storage}</td>
+          <td>${product.display}</td>
+          <td><button class="delete-btn" onclick="removeProductFromComparison(${index})">Delete</button></td>
+        `;
+        compareList.appendChild(row);
+      });
+    }
+
+    // Loop through mobiles and create HTML elements to display them
+    mobiles.forEach(mobile => {
+      const mobileDiv = document.createElement('div');
+      mobileDiv.classList.add('product');
+      mobileDiv.innerHTML = `
+        <div>
+          <h3>${mobile.brand} ${mobile.model}</h3>
+          <p>Price: $${mobile.price}</p>
+        </div>
+        <button class="compare-btn" onclick="compareProduct(event, '${mobile.brand} ${mobile.model}')">Compare</button>
+      `;
+      mobileDiv.addEventListener('click', () => {
+        openPopup(mobile);
+      });
+      productList.appendChild(mobileDiv);
+    });
+  </script>
+</body>
+</html>
+
